@@ -13,8 +13,8 @@ import { TokenBlackList } from '../models/blacklist.model.js';
 
 async function registerUserController(req,res){
 
-    const {username, email , password} = req.body;
-    if(!username || !password || !email){
+    const {username, email , password,fullName} = req.body;
+    if(!username || !password || !email || !fullName){
         return res.status(400).json({
             message : "Please provide username , email and password"
         })
@@ -32,6 +32,7 @@ async function registerUserController(req,res){
        const user = await User.create(
         {
             username,
+            fullName,
             email,
             password: hash
         }

@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import { TokenBlackList } from '../models/blacklist.model'
+import { TokenBlackList } from '../models/blacklist.model.js'
 
  async function authUser(req ,res ,next){
 
