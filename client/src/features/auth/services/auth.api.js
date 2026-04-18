@@ -9,11 +9,11 @@ const api = axios.create({
 })
 
 //Register user
- export async function register({fullname ,username , email, password}){
+ export async function register({fullName ,username , email, password}){
    try {
 
-    const response = await api.post( 'api/v1/auth/register',{
-        fullname,
+    const response = await api.post( '/api/v1/auth/register',{
+        fullName,
         username,
         email,
         password

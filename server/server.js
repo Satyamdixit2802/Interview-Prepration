@@ -1,16 +1,19 @@
-import dotenv from 'dotenv'
+import "dotenv/config";
+
 import {app} from './src/app.js'
 import connection  from './src/config/db.js'
-import cors from 'cors'
 
 
 
-dotenv.config()
 
-const port = process.env.PORT 
+
+
+const port = process.env.PORT ||3000
 
 connection()
 
+
+    
 
 
 

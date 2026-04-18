@@ -1,0 +1,23 @@
+import { useAuth } from "../hooks/useAuth";
+import { Navigate } from "react-router";
+
+
+
+const Protected = ({children}) => {
+    const {loading, user} = useAuth()
+
+     if (loading) {
+    return (
+      <div className="h-screen flex justify-center items-center">
+        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+  
+    if(!user){
+        return <Navigate to='login'/>
+    }
+    return children
+}
+
+export default Protected
