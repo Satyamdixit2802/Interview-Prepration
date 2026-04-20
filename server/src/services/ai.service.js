@@ -1,57 +1,114 @@
-
-
 import { GoogleGenAI } from "@google/genai";
-import zod, { json } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema"
-import { de } from "zod/v4/locales";
+import { z } from "zod";
+
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+const interviewReportSchema = z.object({
+    title: z.string().min(1).describe("The job title for which the interview report is generated."),
+    matchScore: z.number().min(0).max(100).describe("A score between 0 and 100 indicating how well the candidate matches the job."),
+    technicalQuestions: z.array(z.object({
+        question: z.string().min(1).describe("A technical interview question."),
+        intention: z.string().min(1).describe("Why the interviewer would ask this question."),
+        answer: z.string().min(1).describe("How the candidate should answer this question.")
+    })).min(1).describe("Technical interview questions with intent and answer guidance."),
+    behavioralQuestions: z.array(z.object({
+        question: z.string().min(1).describe("A behavioral interview question."),
+        intention: z.string().min(1).describe("Why the interviewer would ask this question."),
+        answer: z.string().min(1).describe("How the candidate should answer this question.")
+    })).min(1).describe("Behavioral interview questions with intent and answer guidance."),
+    skillGaps: z.array(z.object({
+        skill: z.string().min(1).describe("A missing or weak skill for the target role."),
+        severity: z.enum(["low", "medium", "high"]).describe("How much this gap may affect the candidate.")
+    })).min(1).describe("Skill gaps in the candidate profile."),
+    preparationPlan: z.array(z.object({
+        day: z.number().int().min(1).describe("The day number in the preparation plan, starting from 1."),
+        focus: z.string().min(1).describe("The main focus of the day."),
+        tasks: z.array(z.string().min(1)).min(1).describe("Specific preparation tasks for the day.")
+    })).min(1).describe("A day-wise preparation plan.")
+}).strict();
 
-
-const interviewReportSchema = zod.object({
-  matchScore: zod.number().min(0).max(100).describe("Overall match score of candidate with job describe in percentage"),
-  technicalQuestions: zod.array(zod.object({
-    question: zod.string().describe("The technical question can be asked during the interview"),
-    intention: zod.string().describe("The intention of interviewer behind asking this question"),
-    answer: zod.string().describe("How to answer this question in order to impress the interviewer , what points to cover in answer and what points to avoid in answer")
-  })).describe("Technical questions that can be asked in interview along with intention behind asking that question and how to answer that question in order to impress the interviewer"),
-  behaviouralQuestions : zod.array(zod.object({
-    question: zod.string().describe("The behavioural question can be asked during the interview"),
-    intention: zod.string().describe("The intention of interviewer behind asking this question"),
-    answer: zod.string().describe("How to answer this question in order to impress the interviewer , what points to cover in answer and what points to avoid in answer")
-
-  })).describe("Behavioural questions that can be asked in interview along with intention behind asking that question and how to answer that question in order to impress the interviewer"),
-skillGaps : zod.array(zod.object({
-  skills : zod.string().describe("Skill that candidate is lacking and need to improve in order to crack the interview"),
-  severity : zod.enum(["low","medium","high"]).describe("Severity of skill gap is low , medium or high"),
-})).describe("Skill gaps that candidate need to improve in order to crack the interview along with severity of skill gap"),
-preprationPlan : zod.array(zod.object({
-  day : zod.number().describe("Day number of preparation plan"),
-  focus : zod.string().describe("Focus skill or topic to prepare on that day"),
-  tasks : zod.array(zod.string()).describe("Tasks to be done on that day to prepare for interview")
-})).describe("Preparation plan for interview preparation in day wise manner along with focus skill or topic to prepare on that day and tasks to be done on that day to prepare for interview")
-})
-
-async function generateInterviewReport({ resume, jobDescription, selfDescription }) {
-
-  const prompt = `Generate an interview report for the candidate based on the following information:
-                          Resume: ${resume}
-                          Self Description: ${selfDescription}  
-
-                          Job Description: ${jobDescription}`
-
- const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-    config : {
-      responseMimeType : "application/json",
-      responseSchema: zodJsonSchema(interviewReportSchema),
+async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
+    if (!process.env.GEMINI_API_KEY) {
+        throw new Error("GEMINI_API_KEY is missing from the server environment.");
     }
-  });
-  return json.parse(response.text);
 
+    const prompt = `
+You generate interview preparation data from the candidate profile and job description.
+
+Use these inputs:
+- Resume text
+- Self description
+- Job description
+
+Return only valid JSON with exactly these fields:
+{
+  "title": string,
+  "matchScore": number,
+  "technicalQuestions": [
+    {
+      "question": string,
+      "intention": string,
+      "answer": string
+    }
+  ],
+  "behavioralQuestions": [
+    {
+      "question": string,
+      "intention": string,
+      "answer": string
+    }
+  ],
+  "skillGaps": [
+    {
+      "skill": string,
+      "severity": "low" | "medium" | "high"
+    }
+  ],
+  "preparationPlan": [
+    {
+      "day": number,
+      "focus": string,
+      "tasks": string[]
+    }
+  ]
 }
 
+Rules:
+- Do not include markdown, code fences, or commentary.
+- Do not include null values.
+- Do not include extra fields.
+- Do not return empty arrays.
+- Base the match score and questions on the provided candidate context and job description.
 
- export default generateInterviewReport
+Resume:
+${resume}
+
+Self Description:
+${selfDescription}
+
+Job Description:
+${jobDescription}
+`;
+
+    const response = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            responseJsonSchema: z.toJSONSchema(interviewReportSchema),
+            temperature: 0.2
+        }
+    });
+
+    const rawText = response.text?.trim();
+
+    if (!rawText) {
+        throw new Error("Gemini returned an empty response.");
+    }
+
+    return interviewReportSchema.parse(JSON.parse(rawText));
+}
+
+export default generateInterviewReport;

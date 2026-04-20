@@ -18,12 +18,12 @@ const api = axios.create({
         email,
         password
     })
-    return response.data;
+     return response.data;
    }catch (error){
-    console.log(error);
-    
+     console.log(error);
+     throw error
    }
-}
+ }
 //logn useer 
 
 export async function login({ email, password}){
@@ -34,10 +34,10 @@ export async function login({ email, password}){
         email,
         password
     })
-    return response.data;
+     return response.data;
    }catch (error){
-    console.log(error);
-    
+     console.log(error);
+     throw error
    }
 }
 
@@ -48,7 +48,7 @@ export async function logout(){
         
     } catch (error) {
         console.log(error);
-        
+        throw error
     }
 }
 
@@ -58,6 +58,6 @@ export async function getMe () {
          return response.data;
     }catch (error){
         console.log(error);
-        
+        throw error
     }
 }
