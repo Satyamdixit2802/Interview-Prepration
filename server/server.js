@@ -8,18 +8,22 @@ import connection  from './src/config/db.js'
 
 
 
-const port = process.env.PORT ||3000
+const port = process.env.PORT || 3000
 
-connection()
+const startServer = async () => {
+    try {
+        await connection()
+        
+        app.listen(port, () => {
+            console.log(`Server is running on port ${port}`)
+            console.log(`Environment: ${process.env.NODE_ENV || 'development'}`)
+        })
+    } catch(error) {
+        console.error("Failed to start server:", error.message)
+        process.exit(1)
+    }
+}
 
-
-    
-
-
-
-app.listen(port,()=>{
-    console.log("port is running on ",port);
-    
-})
+startServer()
 
 

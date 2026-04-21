@@ -6,6 +6,15 @@ import {authUser} from '../middlewares/auth.middleware.js'
  const authRoute = Router();
 
  /**
+  * @route GET /api/v1/auth/health
+  * @description Health check endpoint
+  * @access Public 
+  */
+ authRoute.get('/health', (req, res) => {
+     res.status(200).json({ status: 'OK', message: 'Auth service is running' })
+ })
+
+ /**
   * @route POST /api/v1/auth/register
   * @description Register a new user
   * @access Public 

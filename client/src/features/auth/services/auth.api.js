@@ -1,12 +1,4 @@
-import axios from 'axios';
-
-const api = axios.create({
-    baseURL:"http://localhost:3000",
-    withCredentials:true,
-    headers : {
-        "Content-Type" : "application/json"
-    }
-})
+import api from '../../../config/api.js';
 
 //Register user
  export async function register({fullName ,username , email, password}){
@@ -20,11 +12,11 @@ const api = axios.create({
     })
      return response.data;
    }catch (error){
-     console.log(error);
+     console.error("Register error:", error.response?.data || error.message);
      throw error
    }
  }
-//logn useer 
+//login user 
 
 export async function login({ email, password}){
    try {
@@ -36,7 +28,7 @@ export async function login({ email, password}){
     })
      return response.data;
    }catch (error){
-     console.log(error);
+     console.error("Login error:", error.response?.data || error.message);
      throw error
    }
 }
@@ -47,7 +39,7 @@ export async function logout(){
         return response.data;
         
     } catch (error) {
-        console.log(error);
+        console.error("Logout error:", error.response?.data || error.message);
         throw error
     }
 }
@@ -57,7 +49,7 @@ export async function getMe () {
          const response = await api.get('/api/v1/auth/get-me',)
          return response.data;
     }catch (error){
-        console.log(error);
+        console.error("GetMe error:", error.response?.data || error.message);
         throw error
     }
 }
