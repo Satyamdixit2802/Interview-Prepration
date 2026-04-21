@@ -1,107 +1,8 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { useInterview } from '../hooks/useInterview'
+import { useParams } from 'react-router'
 
-const interviewReport = {
-  title: "MERN Stack Developer",
-  jobDescription: "",
-  selfDescription: "",
-  matchScore: 92,
-  technicalQuestions: [
-    {
-      question: "Explain the MERN stack architecture and how its components interact to build a full-stack application.",
-      intention: "To assess the candidate's fundamental understanding of the MERN stack and its integrated workflow.",
-      answer: "The MERN stack consists of MongoDB, Express.js, React.js, and Node.js. MongoDB stores data, Express handles backend logic and API routing, React builds the interface, and Node provides the runtime. The frontend communicates with the backend through APIs, and the backend performs CRUD operations against MongoDB."
-    },
-    {
-      question: "How do you manage state in a complex React application, particularly when using Redux Toolkit?",
-      intention: "To evaluate the candidate's proficiency in frontend state management, specifically with Redux Toolkit.",
-      answer: "For larger applications, I use Redux Toolkit because it reduces boilerplate and makes store setup, slices, reducers, and async thunks easier to organize. I use useSelector to read state, useDispatch to trigger actions, and keep small component state local with useState where it makes sense."
-    },
-    {
-      question: "Describe your experience designing and implementing RESTful APIs. How do you handle authentication and authorization in your APIs?",
-      intention: "To understand backend API design skills and security implementation, especially with JWT.",
-      answer: "I design RESTful APIs around resources, clear route naming, and proper HTTP methods and status codes. For authentication, I use JWT tokens issued after login and verified through middleware. For authorization, I add role or permission checks before protected actions are allowed."
-    },
-    {
-      question: "What are the advantages of using a NoSQL database like MongoDB in a MERN stack application compared to a relational database?",
-      intention: "To gauge the candidate's understanding of why MongoDB often fits the MERN ecosystem well.",
-      answer: "MongoDB fits naturally with JavaScript because its document model maps well to objects used in Node and React apps. It allows flexible schemas, is easy to evolve during product changes, and supports horizontal scaling. Relational databases are still strong for strict schemas and complex transactions, but MongoDB often speeds up development in MERN products."
-    }
-  ],
-  behavioralQuestions: [
-    {
-      question: "Tell me about a challenging technical problem you encountered during the development of your Event Management Platform and how you resolved it.",
-      intention: "To assess problem-solving skills, troubleshooting ability, and resilience.",
-      answer: "A major challenge was API latency under heavier usage. I profiled the backend, optimized slow queries, added indexing where needed, and reduced redundant work in a few Express routes. On the frontend, I improved how async state was handled so the UI felt faster and more stable."
-    },
-    {
-      question: "The job description emphasizes collaboration with cross-functional teams. Can you describe a situation where you collaborated effectively with others on a project?",
-      intention: "To evaluate teamwork, communication, and ability to work across functions.",
-      answer: "In a smart home university project, I worked with mobile and hardware teammates while owning backend work. We used Git, held quick syncs, and kept interface expectations clear. When the mobile team hit integration issues, I helped debug and updated the API response format so both sides could move forward smoothly."
-    },
-    {
-      question: "You mentioned continuously learning new technologies. How do you stay updated with the fast-evolving tech ecosystem, and how do you apply new learnings to your work?",
-      intention: "To understand commitment to continuous learning and practical application.",
-      answer: "I follow official docs, newsletters, GitHub projects, and hands-on tutorials. I try to apply what I learn quickly in small project improvements. For example, after learning Redux Toolkit, I used it in a project and saw immediate gains in how clean and maintainable state management became."
-    },
-    {
-      question: "The job description mentions writing clean and maintainable code. How do you ensure your code is clean, readable, and maintainable for others?",
-      intention: "To assess software engineering habits and approach to long-term maintainability.",
-      answer: "I focus on clear naming, small reusable units, predictable file structure, and consistent formatting. I also separate responsibilities cleanly across frontend and backend layers and avoid making components or controllers too large. Linting, formatting tools, and deliberate structure help keep the codebase easier to maintain."
-    }
-  ],
-  skillGaps: [
-    { skill: "Unit and Integration Testing", severity: "medium" },
-    { skill: "Advanced Performance Optimization", severity: "medium" },
-    { skill: "CI/CD and Deployment Automation", severity: "medium" }
-  ],
-  preparationPlan: [
-    {
-      day: 1,
-      focus: "MERN Core and Project Review",
-      tasks: [
-        "Review MongoDB queries, Express middleware, React flow, and Node.js asynchronous patterns.",
-        "Practice explaining the Event Management Platform architecture and the reasoning behind key technical decisions.",
-        "Prepare concise stories around major project challenges and how you solved them."
-      ]
-    },
-    {
-      day: 2,
-      focus: "Advanced Frontend and State Management",
-      tasks: [
-        "Revise Redux Toolkit concepts like slices, async thunks, and selectors.",
-        "Review React performance tools such as memoization and lazy loading.",
-        "Understand common React and Next.js data fetching approaches."
-      ]
-    },
-    {
-      day: 3,
-      focus: "Backend APIs and Security",
-      tasks: [
-        "Revisit RESTful API design principles and consistent route naming.",
-        "Practice JWT authentication and authorization flows.",
-        "Review CORS, validation, XSS, and CSRF mitigation basics."
-      ]
-    },
-    {
-      day: 4,
-      focus: "Behavioral and System Thinking",
-      tasks: [
-        "Prepare STAR answers for collaboration, ownership, and problem solving.",
-        "Think through how a MERN app scales under increased traffic.",
-        "Write down a few strong questions to ask the interviewer."
-      ]
-    },
-    {
-      day: 5,
-      focus: "Skill Gap Focus and Mock Interview",
-      tasks: [
-        "Learn the basics of Jest and React Testing Library at a practical level.",
-        "Review what a CI/CD pipeline looks like and why it matters.",
-        "Do one full mock interview and refine your delivery."
-      ]
-    }
-  ]
-}
+
 
 const sections = [
   { key: "technical", label: "Technical Questions", icon: "</>" },
@@ -118,14 +19,90 @@ const severityStyles = {
 const Interview = () => {
   const [activeSection, setActiveSection] = useState("technical")
   const [expandedQuestion, setExpandedQuestion] = useState(0)
+  const [pageError, setPageError] = useState("")
+  const [downloadError, setDownloadError] = useState("")
+  const [isDownloading, setIsDownloading] = useState(false)
+  const { interviewId } = useParams()
+
+  const { loading, report, generateReportById, getResumePdf } = useInterview()
+
+  useEffect(() => {
+    if (!interviewId) {
+      return
+    }
+
+    if (report?._id === interviewId) {
+      return
+    }
+
+    const loadReport = async () => {
+      try {
+        setPageError("")
+        await generateReportById(interviewId)
+      } catch (error) {
+        setPageError(error?.response?.data?.message || "Unable to load this interview report.")
+      }
+    }
+
+    loadReport()
+  }, [generateReportById, interviewId, report?._id])
+
+  const handleDownloadResume = async () => {
+    setDownloadError("")
+    setIsDownloading(true)
+    try {
+      await getResumePdf({ interviewId })
+    } catch (error) {
+      setDownloadError(error?.response?.data?.message || "Failed to download resume PDF")
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const safeReport = report ?? {
+    title: "",
+    matchScore: 0,
+    technicalQuestions: [],
+    behavioralQuestions: [],
+    skillGaps: [],
+    preparationPlan: []
+  }
 
   const currentQuestions = useMemo(() => {
-    if (activeSection === "behavioral") return interviewReport.behavioralQuestions
-    if (activeSection === "technical") return interviewReport.technicalQuestions
+    if (activeSection === "behavioral") return safeReport.behavioralQuestions
+    if (activeSection === "technical") return safeReport.technicalQuestions
     return []
-  }, [activeSection])
+  }, [activeSection, safeReport.behavioralQuestions, safeReport.technicalQuestions])
 
-  const progressOffset = 276 - (276 * interviewReport.matchScore) / 100
+  const progressOffset = 276 - (276 * safeReport.matchScore) / 100
+
+  if (loading && !report) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-pink-400/90 border-t-transparent" />
+      </div>
+    )
+  }
+
+  if (pageError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-xl rounded-[1.5rem] border border-rose-400/25 bg-rose-500/10 px-6 py-8 text-center text-rose-200">
+          {pageError}
+        </div>
+      </div>
+    )
+  }
+
+  if (!report) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-xl rounded-[1.5rem] border border-white/8 bg-white/[0.03] px-6 py-8 text-center text-slate-200">
+          No interview report is available yet.
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen w-full px-4 py-5 sm:px-6 lg:px-8">
@@ -178,9 +155,12 @@ const Interview = () => {
                 </h1>
                 <span className="rounded-full border border-white/8 bg-white/[0.03] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                   {activeSection === "roadmap"
-                    ? `${interviewReport.preparationPlan.length} days`
+                    ? `${safeReport.preparationPlan.length} days`
                     : `${currentQuestions.length} questions`}
                 </span>
+              </div>
+              <div className="text-sm text-slate-400">
+                Role: <span className="font-medium text-slate-200">{safeReport.title || "Interview Report"}</span>
               </div>
             </div>
 
@@ -239,7 +219,7 @@ const Interview = () => {
               </div>
             ) : (
               <div className="mt-6 grid gap-4">
-                {interviewReport.preparationPlan.map((dayPlan) => (
+                {safeReport.preparationPlan.map((dayPlan) => (
                   <article
                     key={dayPlan.day}
                     className="rounded-[1.35rem] border border-white/8 bg-[#151c28] p-4 sm:p-5"
@@ -309,7 +289,7 @@ const Interview = () => {
 
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-4xl font-bold text-white">
-                      {interviewReport.matchScore}
+                      {safeReport.matchScore}
                     </span>
                     <span className="mt-1 text-sm font-semibold text-slate-400">%</span>
                   </div>
@@ -327,7 +307,7 @@ const Interview = () => {
               </p>
 
               <div className="mt-4 space-y-3">
-                {interviewReport.skillGaps.map((gap) => (
+                {safeReport.skillGaps.map((gap) => (
                   <div
                     key={gap.skill}
                     className={`rounded-2xl border px-4 py-3 text-sm font-semibold leading-6 ${severityStyles[gap.severity]}`}
@@ -336,6 +316,24 @@ const Interview = () => {
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="mt-8 border-t border-white/8 pt-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500 mb-4">
+                Actions
+              </p>
+
+              {downloadError && (
+                <p className="mb-3 text-sm text-rose-300">{downloadError}</p>
+              )}
+
+              <button
+                onClick={handleDownloadResume}
+                disabled={isDownloading || !report}
+                className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-3 text-sm font-semibold text-white transition hover:shadow-[0_10px_25px_rgba(59,130,246,0.25)] disabled:cursor-not-allowed disabled:opacity-50 hover:-translate-y-0.5 active:translate-y-0.5"
+              >
+                {isDownloading ? "Downloading..." : "📥 Download Resume PDF"}
+              </button>
             </div>
           </aside>
         </main>
