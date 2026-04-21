@@ -22,7 +22,6 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
     optionsSuccessStatus: 200
 }))
-
 //Routes 
 import authRoute from './routes/auth.routes.js';
 import interviewRoute from './routes/interview.route.js';
