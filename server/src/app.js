@@ -9,7 +9,7 @@ const app = express()
 // Get allowed origins from environment
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
     ? process.env.ALLOWED_ORIGINS.split(',') 
-    : ["http://localhost:5173"]
+    : [allowedOrigins]
 
 app.use(express.json({limit :"16kb"}))
 app.use(express.urlencoded({ extended: true ,limit: "16kb" }));

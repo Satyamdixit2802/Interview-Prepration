@@ -16,7 +16,7 @@ const LogIn = () => {
       await handleLogin({ email, password })
       navigate('/')
     } catch (error) {
-      toast.error("Invalid email or password")
+      toast.error("Invalid email or password",error)
     }
   }
 
