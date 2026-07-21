@@ -22,16 +22,9 @@ api.interceptors.request.use(
 )
 
 // Response interceptor to handle auth errors
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if(error.response?.status === 401) {
-            // Token expired or invalid - clear user session
-            localStorage.removeItem('user')
-            window.location.href = '/login'
-        }
-        return Promise.reject(error)
-    }
+aapi.interceptors.response.use(
+  (response) => response,
+  (error) => Promise.reject(error)
 )
 
 export default api

@@ -1,6 +1,7 @@
 import { generateInterviewReport, getAllInterviewReports, getInterviewById,generateResumePdf } from '../services/interview.api'
 import { useContext } from 'react'
 import { InterviewContext } from '../Interview.Context'
+import { useCallback, } from "react";
 
 export const useInterview = () =>{
 
@@ -43,17 +44,12 @@ export const useInterview = () =>{
         }
     }
 
-    const getReports = async () =>{
-        try {
-            const response = await getAllInterviewReports()
-            console.log("Get All Reports Response:", response)
-            setReports(response.interviewReports || [])
-            return response.interviewReports || []
-        } catch (error) {
-            console.error("Get Reports Error:", error);
-            throw error
-        }
-    }
+   
+const getReports = useCallback(async () => {
+  const response = await getAllInterviewReports();
+  setReports(response.interviewReports || []);
+  return response.interviewReports || [];
+}, [setReports]);
 
     const getResumePdf = async ({interviewId}) => {
         try {
