@@ -141,7 +141,7 @@ Set this frontend Render environment variable before building:
 VITE_API_BASE_URL=https://resume-shortner-pmmq.onrender.com
 ```
 
-Do not add a trailing slash to `ALLOWED_ORIGINS`. If you deploy the frontend at another domain, replace it with that exact HTTPS origin and redeploy the backend.
+Do not add a trailing slash to `ALLOWED_ORIGINS`. The deployed Render client origin is allowed by default; add any additional frontend domain here and redeploy the backend.
 
 
 ## 💻 Usage

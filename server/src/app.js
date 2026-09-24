@@ -6,18 +6,20 @@ import cors from 'cors'
 const app = express()
 //middlewares
 
-const defaultDevelopmentOrigins = [
+const defaultAllowedOrigins = [
+    'https://resume-shortner-client.onrender.com',
     'http://localhost:5173',
     'http://127.0.0.1:5173'
 ]
 
 const configuredOrigins = process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL || process.env.CLIENT_URL
-const allowedOrigins = configuredOrigins
+const environmentOrigins = configuredOrigins
     ? configuredOrigins
         .split(',')
         .map((origin) => origin.trim().replace(/\/$/, ''))
         .filter(Boolean)
-    : defaultDevelopmentOrigins
+    : []
+const allowedOrigins = [...new Set([...defaultAllowedOrigins, ...environmentOrigins])]
 
 app.use(express.json({limit :"16kb"}))
 app.use(express.urlencoded({ extended: true ,limit: "16kb" }));
