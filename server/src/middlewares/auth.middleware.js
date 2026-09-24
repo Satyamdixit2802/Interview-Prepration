@@ -2,7 +2,11 @@ import jwt from 'jsonwebtoken'
 import { TokenBlackList } from '../models/blacklist.model.js'
 
  async function authUser(req ,res ,next){
-    const token = req.cookies.token
+    const authorization = req.get('authorization')
+    const bearerToken = authorization?.startsWith('Bearer ')
+        ? authorization.slice(7).trim()
+        : null
+    const token = bearerToken || req.cookies.token
 
     if(!token){
         return res.status(401).json({

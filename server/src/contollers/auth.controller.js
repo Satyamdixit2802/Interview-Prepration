@@ -49,6 +49,7 @@ async function registerUserController(req,res){
 
        res.status(201).json({
         message :"User registered successful ",
+        token,
         user : {
             id: user._id,
             username:  user.username,
@@ -93,6 +94,7 @@ async function loginUserController(req, res){
 
        res.status(200).json({
         message :" user loggedIn successful",
+        token,
         user : {
             id: user._id,
             username: user.username,
@@ -109,7 +111,11 @@ async function loginUserController(req, res){
   * @access Public 
   */
    async function logoutUserController (req,res){
-    const token = req.cookies.token
+    const authorization = req.get('authorization')
+    const bearerToken = authorization?.startsWith('Bearer ')
+        ? authorization.slice(7).trim()
+        : null
+    const token = bearerToken || req.cookies.token
 
     if(token){
         await TokenBlackList.create({token})

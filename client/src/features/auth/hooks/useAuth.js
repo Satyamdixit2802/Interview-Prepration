@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { AuthContext } from "../Auth.context";
 import { register,login,logout } from "../services/auth.api";
+import { clearAuthToken, setAuthToken } from "../../../config/api";
 
 export const useAuth = () => {
     const context = useContext(AuthContext)
@@ -14,9 +15,11 @@ export const useAuth = () => {
       if (!data?.user) {
         throw new Error("Login failed");
       }
+      setAuthToken(data.token)
       setUser(data.user)
       return data.user
        } catch (error) {
+         clearAuthToken()
          setUser(null)
          throw error
        }finally{
@@ -33,10 +36,12 @@ export const useAuth = () => {
     if (!data?.user) {
         throw new Error("Registration failed");
     }
+    setAuthToken(data.token)
     setUser(data.user)
     return data.user
     
     } catch (error) {
+        clearAuthToken()
         setUser(null)
         throw error
     }finally {
@@ -53,6 +58,7 @@ export const useAuth = () => {
     } catch {
         return null
     }finally {
+        clearAuthToken()
         setUser(null)
         setLoading(false)
     }

@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState  } from "react";
 import { getMe } from "./services/auth.api";
+import { clearAuthToken } from "../../config/api";
 
 
 export const AuthContext = createContext();
@@ -19,6 +20,7 @@ export const AuthProvider = ({ children }) => {
         }
       } catch {
         if (isActive) {
+          clearAuthToken();
           setUser(null);
         }
       } finally {
