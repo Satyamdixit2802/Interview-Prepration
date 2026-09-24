@@ -17,13 +17,8 @@ const Home = () => {
 
   useEffect(() => {
     const fetchReports = async () => {
-      try {
-        await getReports()
-      } catch (error) {
-        console.log("Error loading reports:", error)
-      } finally {
-        setReportsLoaded(true)
-      }
+      await getReports().catch(() => [])
+      setReportsLoaded(true)
     }
     fetchReports()
   }, [getReports])

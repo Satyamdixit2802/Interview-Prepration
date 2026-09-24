@@ -17,12 +17,8 @@ export const useInterview = () =>{
         setLoading(true)
         try {
             const response = await generateInterviewReport({jobDescription, selfDescription, resumeFile})
-            console.log("Generate Report Response:", response)
             setReport(response.interviewReport)
             return response.interviewReport
-        } catch(error){
-            console.error("Generate Report Error:", error);
-            throw error
         } finally{
             setLoading(false)
         }
@@ -32,13 +28,9 @@ export const useInterview = () =>{
         setLoading(true)
         try {
             const response = await getInterviewById(interviewId)
-            console.log("Get Report By ID Response:", response)
             const nextReport = response.interviewReport ?? response.interviewFile
             setReport(nextReport)
             return nextReport
-        } catch(error){
-            console.error("Get Report Error:", error);
-            throw error
         } finally {
             setLoading(false)
         }
@@ -52,22 +44,16 @@ const getReports = useCallback(async () => {
 }, [setReports]);
 
     const getResumePdf = async ({interviewId}) => {
-        try {
-            const response = await generateResumePdf({interviewId})
-            console.log("PDF Download Response:", response)
-            const url = window.URL.createObjectURL(new Blob([response], { type: 'application/pdf' }));
-            const link = document.createElement('a');   
-            link.href = url;    
-            link.setAttribute('download', `resume_${interviewId}.pdf`);
-            document.body.appendChild(link);
-            link.click();
-            window.URL.revokeObjectURL(url);
-            link.remove();
-            return response
-        } catch (error) {
-            console.error("PDF Download Error:", error);
-            throw error
-        }
+        const response = await generateResumePdf({interviewId})
+        const url = window.URL.createObjectURL(new Blob([response], { type: 'application/pdf' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `resume_${interviewId}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        window.URL.revokeObjectURL(url);
+        link.remove();
+        return response
     }
     return {loading,report,reports,generateReport,generateReportById,getReports,getResumePdf}
 }

@@ -17,7 +17,6 @@ export const useAuth = () => {
       setUser(data.user)
       return data.user
        } catch (error) {
-         console.log(error);
          setUser(null)
          throw error
        }finally{
@@ -38,7 +37,6 @@ export const useAuth = () => {
     return data.user
     
     } catch (error) {
-        console.log(error);
         setUser(null)
         throw error
     }finally {
@@ -52,8 +50,8 @@ export const useAuth = () => {
     setLoading(true)
     try {
         await logout()
-    } catch (error) {
-        console.log(error);
+    } catch {
+        return null
     }finally {
         setUser(null)
         setLoading(false)
