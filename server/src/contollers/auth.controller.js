@@ -2,6 +2,7 @@ import {User}  from '../models/user.model.js'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { TokenBlackList } from '../models/blacklist.model.js';
+import { authCookieOptions, clearAuthCookieOptions, jwtExpiresIn } from '../config/auth.js';
 
 
 
@@ -41,15 +42,10 @@ async function registerUserController(req,res){
             id: user._id , username: username
         },
         process.env.JWT_SECRET,
-        {expiresIn : "1d"}
+        {expiresIn : jwtExpiresIn}
        )
          
-       res.cookie("token", token, {
-           httpOnly: true,
-           secure: process.env.NODE_ENV === "production",
-           sameSite: "strict",
-           maxAge: 24 * 60 * 60 * 1000
-       })
+       res.cookie("token", token, authCookieOptions)
 
        res.status(201).json({
         message :"User registered successful ",
@@ -90,15 +86,10 @@ async function loginUserController(req, res){
             id: user._id , username: user.username
         },
         process.env.JWT_SECRET,
-        {expiresIn : "1d"}
+        {expiresIn : jwtExpiresIn}
        )
          
-       res.cookie("token", token, {
-           httpOnly: true,
-           secure: process.env.NODE_ENV === "production",
-           sameSite: "strict",
-           maxAge: 24 * 60 * 60 * 1000
-       })
+       res.cookie("token", token, authCookieOptions)
 
        res.status(200).json({
         message :" user loggedIn successful",
@@ -118,12 +109,12 @@ async function loginUserController(req, res){
   * @access Public 
   */
    async function logoutUserController (req,res){
-    const token  = req.cookies.token
+    const token = req.cookies.token
 
     if(token){
         await TokenBlackList.create({token})
     }
-    res.clearCookie("token")
+    res.clearCookie("token", clearAuthCookieOptions)
 
     res.status(200).json({
         message: "  User logout successfuly"
@@ -133,7 +124,7 @@ async function loginUserController(req, res){
 
 /**
   * @name GET getMeController
-  * @description get the current logged in user details expects token in cookie
+ * @description get the current logged in user details from the authentication cookie
   * @access private
   */
 

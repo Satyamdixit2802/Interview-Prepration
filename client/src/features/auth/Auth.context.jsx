@@ -9,18 +9,30 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isActive = true;
+
     const getAndSetUser = async () => {
       try {
         const data = await getMe();
-        setUser(data?.user ?? null);
-      } catch (error) {
-        setUser(null);
+        if (isActive) {
+          setUser(data?.user ?? null);
+        }
+      } catch {
+        if (isActive) {
+          setUser(null);
+        }
       } finally {
-        setLoading(false);
+        if (isActive) {
+          setLoading(false);
+        }
       }
     };
 
     getAndSetUser();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   return (

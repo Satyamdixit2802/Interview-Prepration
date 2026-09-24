@@ -88,6 +88,12 @@ npm run dev
 
 The client will be available at `http://localhost:5173`
 
+Create `client/.env.local` for local development:
+
+```env
+VITE_API_BASE_URL=http://localhost:3000
+```
+
 ### Backend Setup
 
 1. Navigate to the server directory:
@@ -104,6 +110,38 @@ npm install
 ```bash
 npm run dev
 ```
+
+Create `server/.env` with your private database and AI configuration, plus:
+
+```env
+NODE_ENV=development
+JWT_SECRET=replace-with-a-long-random-secret
+JWT_EXPIRES_IN=1d
+ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
+## Render Deployment
+
+The application uses an HTTP-only JWT cookie. The frontend must send requests with credentials (already configured in Axios), and the backend must allow the exact frontend origin.
+
+Set these backend Render environment variables:
+
+```env
+NODE_ENV=production
+JWT_SECRET=replace-with-a-long-random-secret
+JWT_EXPIRES_IN=1d
+ALLOWED_ORIGINS=https://resume-shortner-client.onrender.com
+MONGO_URI=your-mongodb-connection-string
+GEMINI_API_KEY=your-gemini-api-key
+```
+
+Set this frontend Render environment variable before building:
+
+```env
+VITE_API_BASE_URL=https://resume-shortner-pmmq.onrender.com
+```
+
+Do not add a trailing slash to `ALLOWED_ORIGINS`. If you deploy the frontend at another domain, replace it with that exact HTTPS origin and redeploy the backend.
 
 
 ## 💻 Usage

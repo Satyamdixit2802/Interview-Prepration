@@ -52,11 +52,10 @@ export const useAuth = () => {
     setLoading(true)
     try {
         await logout()
-    setUser(null)
     } catch (error) {
         console.log(error);
-        throw error
     }finally {
+        setUser(null)
         setLoading(false)
     }
     
