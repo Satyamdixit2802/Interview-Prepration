@@ -65,6 +65,9 @@ const Home = () => {
   const handleResumeChange = (event) => {
     const nextFile = event.target.files?.[0] ?? null
     setResumeFile(nextFile)
+    if (nextFile) {
+      setSelfDescription("")
+    }
     setErrors((currentErrors) => ({
       ...currentErrors,
       profile: undefined,
@@ -238,7 +241,14 @@ const Home = () => {
                   <textarea 
                     value={selfDescription}
                     onChange={(e) => {
-                      setSelfDescription(e.target.value)
+                      const nextDescription = e.target.value
+                      setSelfDescription(nextDescription)
+                      if (nextDescription.trim()) {
+                        setResumeFile(null)
+                        if (resumeInputRef.current) {
+                          resumeInputRef.current.value = ""
+                        }
+                      }
                       setErrors((currentErrors) => ({ ...currentErrors, profile: undefined }))
                     }}
                     placeholder="Briefly describe your experience, strongest skills, domain focus, and what kind of role you are targeting."
@@ -247,8 +257,8 @@ const Home = () => {
                 </div>
 
                 <div className="rounded-[1.15rem] border border-blue-400/20 bg-blue-500/10 px-4 py-4 text-sm leading-6 text-blue-100">
-                  Either a resume or a self-description is enough to generate a
-                  personalized plan. Adding both usually gives stronger results.
+                  Choose one profile source: upload a resume or provide a
+                  self-description.
                 </div>
 
                 <div className="rounded-[1.15rem] border border-white/8 bg-white/[0.03] px-4 py-4">
