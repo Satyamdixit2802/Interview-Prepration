@@ -2,7 +2,8 @@ import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 import puppeteer from 'puppeteer';
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
+const GEMINI_PDF_MODEL = process.env.GEMINI_PDF_MODEL || GEMINI_MODEL;
 
 function getAiClient() {
     if (!process.env.GEMINI_API_KEY) {
@@ -10,6 +11,28 @@ function getAiClient() {
     }
 
     return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+}
+
+function getGeminiErrorMessage(error) {
+    const status = error?.status || error?.response?.status;
+
+    if (status === 401 || status === 403) {
+        return "Gemini rejected the server API key.";
+    }
+
+    if (status === 404) {
+        return "The configured Gemini model is unavailable for this API key.";
+    }
+
+    if (status === 429) {
+        return "Gemini request quota is currently exhausted. Please try again later.";
+    }
+
+    if (status === 503) {
+        return "Gemini is temporarily unavailable. Please try again shortly.";
+    }
+
+    return "Gemini could not generate the interview report. Please try again.";
 }
 
 const interviewReportSchema = z.object({
@@ -143,7 +166,7 @@ async function generateResumePdf({resume ,selfDescription,jobDescription}){
    the content should be ATS friendly and should be easily parsable by ATS systems.`;
 
           const response = await getAiClient().models.generateContent({
-            model: "gemini-2.5-flash",
+            model: GEMINI_PDF_MODEL,
             contents: prompt,
             config: {
                 responseMimeType: "application/json",
@@ -156,4 +179,4 @@ async function generateResumePdf({resume ,selfDescription,jobDescription}){
         return pdfBuffer;
 }
 
-export  { generateInterviewReport , generateResumePdf };
+export  { generateInterviewReport, generateResumePdf, getGeminiErrorMessage };

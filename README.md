@@ -133,6 +133,7 @@ JWT_EXPIRES_IN=1d
 ALLOWED_ORIGINS=https://resume-shortner-client.onrender.com
 MONGO_URI=your-mongodb-connection-string
 GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-3.5-flash-lite
 ```
 
 Set this frontend Render environment variable before building:

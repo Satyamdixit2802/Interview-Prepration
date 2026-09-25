@@ -2,6 +2,7 @@ import { PDFParse } from "pdf-parse";
 import {
   generateInterviewReport,
   generateResumePdf,
+  getGeminiErrorMessage,
 } from "../services/ai.service.js";
 import { InterviewReport } from "../models/interviewReport.model.js";
 
@@ -36,13 +37,7 @@ async function generateInterviewController(req, res) {
 
   if (!hasResume && !hasSelfDescription) {
     return res.status(400).json({
-      message: "Upload a resume or provide a self-description.",
-    });
-  }
-
-  if (hasResume && hasSelfDescription) {
-    return res.status(400).json({
-      message: "Choose either a resume or a self-description, not both.",
+      message: "Upload a resume, provide a self-description, or include both.",
     });
   }
 
@@ -72,7 +67,7 @@ async function generateInterviewController(req, res) {
     return res.status(isConfigurationError ? 500 : 502).json({
       message: isConfigurationError
         ? "Interview generation is not configured on the server."
-        : "We could not generate the interview report. Please try again.",
+        : getGeminiErrorMessage(error),
     });
   }
 
@@ -136,11 +131,23 @@ async function generateResumePdfController(req, res) {
     });
   }
   const { resume, selfDescription, jobDescription } = interviewReport;
-  const pdfBuffer = await generateResumePdf({
-    resume,
-    selfDescription,
-    jobDescription,
-  });
+  let pdfBuffer;
+
+  try {
+    pdfBuffer = await generateResumePdf({
+      resume,
+      selfDescription,
+      jobDescription,
+    });
+  } catch (error) {
+    const isConfigurationError = error.message === "GEMINI_API_KEY is missing from the server environment.";
+
+    return res.status(isConfigurationError ? 500 : 502).json({
+      message: isConfigurationError
+        ? "Resume generation is not configured on the server."
+        : getGeminiErrorMessage(error),
+    });
+  }
 
   res.set({
     "content-type": "application/pdf",

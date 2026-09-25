@@ -48,7 +48,7 @@ const Home = () => {
     }
 
     if (!hasProfileInput) {
-      nextErrors.profile = "Upload a resume or write a quick self-description."
+      nextErrors.profile = "Upload a resume, write a quick self-description, or include both."
     }
 
     if (resumeFile && resumeFile.type !== "application/pdf") {
@@ -65,9 +65,6 @@ const Home = () => {
   const handleResumeChange = (event) => {
     const nextFile = event.target.files?.[0] ?? null
     setResumeFile(nextFile)
-    if (nextFile) {
-      setSelfDescription("")
-    }
     setErrors((currentErrors) => ({
       ...currentErrors,
       profile: undefined,
@@ -169,7 +166,7 @@ const Home = () => {
                   Your Profile
                 </p>
                 <p className="mt-1 text-sm text-slate-400">
-                  Add a resume or a quick self-description for stronger results.
+                  Add a resume and a quick self-description for stronger results.
                 </p>
               </div>
 
@@ -229,7 +226,7 @@ const Home = () => {
                 <div className="flex items-center gap-3">
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                   <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
-                    Or
+                    And
                   </span>
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                 </div>
@@ -241,14 +238,7 @@ const Home = () => {
                   <textarea 
                     value={selfDescription}
                     onChange={(e) => {
-                      const nextDescription = e.target.value
-                      setSelfDescription(nextDescription)
-                      if (nextDescription.trim()) {
-                        setResumeFile(null)
-                        if (resumeInputRef.current) {
-                          resumeInputRef.current.value = ""
-                        }
-                      }
+                      setSelfDescription(e.target.value)
                       setErrors((currentErrors) => ({ ...currentErrors, profile: undefined }))
                     }}
                     placeholder="Briefly describe your experience, strongest skills, domain focus, and what kind of role you are targeting."
@@ -257,8 +247,7 @@ const Home = () => {
                 </div>
 
                 <div className="rounded-[1.15rem] border border-blue-400/20 bg-blue-500/10 px-4 py-4 text-sm leading-6 text-blue-100">
-                  Choose one profile source: upload a resume or provide a
-                  self-description.
+                  Add either profile source, or include both for a richer Gemini analysis.
                 </div>
 
                 <div className="rounded-[1.15rem] border border-white/8 bg-white/[0.03] px-4 py-4">
