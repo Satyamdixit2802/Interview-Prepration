@@ -4,7 +4,13 @@ import puppeteer from 'puppeteer';
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+function getAiClient() {
+    if (!process.env.GEMINI_API_KEY) {
+        throw new Error("GEMINI_API_KEY is missing from the server environment.");
+    }
+
+    return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+}
 
 const interviewReportSchema = z.object({
     title: z.string().min(1).describe("The job title for which the interview report is generated."),
@@ -31,10 +37,6 @@ const interviewReportSchema = z.object({
 }).strict();
 
 async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
-    if (!process.env.GEMINI_API_KEY) {
-        throw new Error("GEMINI_API_KEY is missing from the server environment.");
-    }
-
     const prompt = `
 You generate interview preparation data from the candidate profile and job description.
 
@@ -93,7 +95,7 @@ Job Description:
 ${jobDescription}
 `;
 
-    const response = await ai.models.generateContent({
+    const response = await getAiClient().models.generateContent({
         model: GEMINI_MODEL,
         contents: prompt,
         config: {
@@ -109,7 +111,11 @@ ${jobDescription}
         throw new Error("Gemini returned an empty response.");
     }
 
-    return interviewReportSchema.parse(JSON.parse(rawText));
+    try {
+        return interviewReportSchema.parse(JSON.parse(rawText));
+    } catch {
+        throw new Error("Gemini returned an invalid interview report.");
+    }
 }
 
 async function generatePdfFromHtml(htmlContent) {
@@ -136,7 +142,7 @@ async function generateResumePdf({resume ,selfDescription,jobDescription}){
    . you can highlight the skills and experience mentioned in the job description and self description in the resume bu look professional.
    the content should be ATS friendly and should be easily parsable by ATS systems.`;
 
-          const response = await ai.models.generateContent({
+          const response = await getAiClient().models.generateContent({
             model: "gemini-2.5-flash",
             contents: prompt,
             config: {

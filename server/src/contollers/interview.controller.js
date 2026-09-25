@@ -5,6 +5,23 @@ import {
 } from "../services/ai.service.js";
 import { InterviewReport } from "../models/interviewReport.model.js";
 
+async function extractResumeText(file) {
+  const parser = new PDFParse({ data: file.buffer });
+
+  try {
+    const result = await parser.getText();
+    const text = result.text?.trim() || "";
+
+    if (!text) {
+      throw new Error("The resume does not contain readable text.");
+    }
+
+    return text.slice(0, 50000);
+  } finally {
+    await parser.destroy();
+  }
+}
+
 async function generateInterviewController(req, res) {
   const selfDescription = req.body.selfDescription?.trim() || "";
   const jobDescription = req.body.jobDescription?.trim() || "";
@@ -29,19 +46,39 @@ async function generateInterviewController(req, res) {
     });
   }
 
-  const resumeContent = req.file
-    ? await new PDFParse(Uint8Array.from(req.file.buffer)).getText()
-    : { text: "" };
+  let resume = "";
 
-  const interviewReportByAi = await generateInterviewReport({
-    resume: resumeContent.text,
-    selfDescription: hasSelfDescription ? selfDescription : "",
-    jobDescription,
-  });
+  if (hasResume) {
+    try {
+      resume = await extractResumeText(req.file);
+    } catch (error) {
+      return res.status(400).json({
+        message: error.message || "We could not read the uploaded PDF.",
+      });
+    }
+  }
+
+  let interviewReportByAi;
+
+  try {
+    interviewReportByAi = await generateInterviewReport({
+      resume,
+      selfDescription: hasSelfDescription ? selfDescription : "",
+      jobDescription,
+    });
+  } catch (error) {
+    const isConfigurationError = error.message === "GEMINI_API_KEY is missing from the server environment.";
+
+    return res.status(isConfigurationError ? 500 : 502).json({
+      message: isConfigurationError
+        ? "Interview generation is not configured on the server."
+        : "We could not generate the interview report. Please try again.",
+    });
+  }
 
   const interviewReport = await InterviewReport.create({
     user: req.user.id,
-    resume: resumeContent.text,
+    resume,
     selfDescription: hasSelfDescription ? selfDescription : "",
     jobDescription,
     ...interviewReportByAi,

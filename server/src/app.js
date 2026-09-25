@@ -1,6 +1,7 @@
 import express from 'express'
 import cookieParser from "cookie-parser";
 import cors from 'cors'
+import multer from 'multer'
 
 
 const app = express()
@@ -39,6 +40,28 @@ import interviewRoute from './routes/interview.route.js';
 
 app.use('/api/v1/auth',authRoute)
 app.use('/api/v1/interview',interviewRoute)
+
+app.use((error, req, res, next) => {
+    if (error instanceof multer.MulterError) {
+        const message = error.code === 'LIMIT_FILE_SIZE'
+            ? 'Resume file must be 5MB or smaller.'
+            : 'Please upload a PDF resume.'
+
+        return res.status(400).json({ message })
+    }
+
+    next(error)
+})
+
+app.use((error, req, res, next) => {
+    if (res.headersSent) {
+        return next(error)
+    }
+
+    res.status(500).json({
+        message: 'An unexpected server error occurred.'
+    })
+})
 
 
 
